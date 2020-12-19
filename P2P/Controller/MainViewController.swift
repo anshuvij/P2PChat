@@ -14,6 +14,8 @@ class MainViewController: UIViewController {
     var cachedDevices = Array<Device>()
     var cachedPeripheralNames = Dictionary<String, String>()
     var timer = Timer()
+    var dicoveredUUID: UUID?
+    var discoveredName : String?
     
     var peripheralManager = CBPeripheralManager()
     var centralManager: CBCentralManager?
@@ -82,6 +84,8 @@ class MainViewController: UIViewController {
         if !list.contains(where: { $0.peripheral.identifier == device.peripheral.identifier }) {
             
             list.append(device)
+            dicoveredUUID = device.peripheral.identifier
+            discoveredName = device.name
           //  tableView?.reloadData()
         }
         else if list.contains(where: { $0.peripheral.identifier == device.peripheral.identifier
@@ -92,12 +96,28 @@ class MainViewController: UIViewController {
                 if (list[index].peripheral.identifier == device.peripheral.identifier) {
                     
                     list[index].name = device.name
+                    dicoveredUUID = device.peripheral.identifier
+                    discoveredName = device.name
                     tableView?.reloadData()
                     break
                 }
             }
             
         }
+    }
+    
+    func showAlert(identifier : UUID, name : String) {
+        let alertController = UIAlertController(title: "Would you like to Chat", message: " Press Ok to Chat", preferredStyle: .alert)
+        let okAction = UIAlertAction(title: "OK", style: .default) { (UIAlertAction) in
+           
+            let chatViewController = ChatViewController()
+            
+            chatViewController.deviceUUID = identifier
+            chatViewController.deviceAttributes = name
+            self.navigationController?.pushViewController(chatViewController, animated: true)
+        }
+        alertController.addAction(okAction)
+        self.present(alertController, animated: true)
     }
 
 }
@@ -134,10 +154,8 @@ extension MainViewController : UITableViewDataSource {
 extension MainViewController : UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let chatViewController = ChatViewController()
-        chatViewController.deviceUUID = visibleDevices[indexPath.row].peripheral.identifier
-        chatViewController.deviceAttributes = visibleDevices[indexPath.row].name
-        self.navigationController?.pushViewController(chatViewController, animated: true)
+        
+        showAlert(identifier: dicoveredUUID!, name: discoveredName!)
     }
     
 }
